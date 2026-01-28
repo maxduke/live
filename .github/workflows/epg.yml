@@ -4,19 +4,23 @@ on:
   schedule:
     - cron: '15 16,18,20,22,0,2,4,6,8,10,12,14 * * *'
 
+# 增加权限设置，确保 Actions 有权限写代码
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Update EPG Files
+    
+    - name: Download EPG Files
       run: |
         rm -f e.xml && wget https://epg.112114.xyz/pp.xml -O e.xml
-        git config --local user.name "github-actions[bot]"
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git add e.xml
-        git commit -m "EPG Update."
-    - name: Push changes
-      run: git push origin main
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Commit and Push if changed
+      uses: stefanzweifel/git-auto-commit-action@v7
+      with:
+        commit_message: EPG Update.
+        file_pattern: e.xml
+        branch: main
